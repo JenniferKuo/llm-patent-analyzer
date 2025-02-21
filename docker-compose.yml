@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: 
+      context: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434 # Use local machine's ollama service
+      - MODEL_NAME=mistral
+      - OLLAMA_TIMEOUT=300.0
+    networks:
+      - app-network
+    # On Linux, you need to add this extra_host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  backend-with-ollama:
+    extends: backend
+    environment:
+      - OLLAMA_HOST=http://ollama:11434 # Ollama service on docker network
+      - MODEL_NAME=mistral
+      - OLLAMA_TIMEOUT=300.0
+    depends_on:
+      ollama:
+        condition: service_started
+        required: false
+    command: >
+      sh -c "
+        sleep 5 &&  # Wait for ollama service to be ready
+        if ! curl -s http://ollama:11434/api/tags | grep -q ${MODEL_NAME}; then
+          curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"${MODEL_NAME}\"}'
+        fi &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+    networks:
+      - app-network
+    profiles:
+      - with-ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - app-network
+    profiles:
+      - with-ollama
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  ollama_data: 
