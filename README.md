@@ -5,9 +5,10 @@ This is a web application that allows users to analyze patent infringement using
 
 ## Demo
 Since running ollama on docker can be extreamly slow and cause timeout, I running it on terminal for demo.
-<video width="100%" controls>
-  <source src="demo.mp4" type="video/mp4">
-</video>
+
+https://github.com/user-attachments/assets/2a1f5206-7e2f-4ba5-abcf-bea1c424967d
+
+
 
 ## Run 
 ```
