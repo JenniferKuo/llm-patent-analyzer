@@ -11,26 +11,28 @@ services:
     networks:
       - app-network
 
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - OLLAMA_HOST=http://host.docker.internal:11434 # Use local machine's ollama service
+  #     - MODEL_NAME=mistral
+  #     - OLLAMA_TIMEOUT=300.0
+  #   networks:
+  #     - app-network
+  #   # On Linux, you need to add this extra_host
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     environment:
-      - OLLAMA_HOST=http://host.docker.internal:11434 # Use local machine's ollama service
+      - OLLAMA_HOST=http://ollama:11434
       - MODEL_NAME=mistral
-      - OLLAMA_TIMEOUT=300.0
-    networks:
-      - app-network
-    # On Linux, you need to add this extra_host
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  backend-with-ollama:
-    extends: backend
-    environment:
-      - OLLAMA_HOST=http://ollama:11434 # Ollama service on docker network
-      - MODEL_NAME=mistral
-      - OLLAMA_TIMEOUT=300.0
+      - OLLAMA_TIMEOUT=600.0
     depends_on:
       ollama:
         condition: service_started
@@ -45,8 +47,6 @@ services:
       "
     networks:
       - app-network
-    profiles:
-      - with-ollama
 
   ollama:
     image: ollama/ollama:latest
@@ -58,8 +58,6 @@ services:
     restart: unless-stopped
     networks:
       - app-network
-    profiles:
-      - with-ollama
 
 networks:
   app-network:
